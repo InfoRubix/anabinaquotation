@@ -68,6 +68,17 @@
         }
         .primary-action-btn { background-color: #16a34a; color: white; }
         .primary-action-btn:hover { background-color: #15803d; }
+        .accordion-header { cursor: pointer; }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-content.open {
+            max-height: 500px; /* Adjust as needed */
+        }
+        .chevron-icon { transition: transform 0.3s ease; }
+        .chevron-icon.open { transform: rotate(180deg); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -91,14 +102,41 @@
                 </div>
 
                 <div class="space-y-6">
+                    <!-- Your Company Information (Accordion) -->
                     <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4 border-b pb-2">Client Information</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input id="clientName" type="text" placeholder="Client Name" class="form-input" oninput="updatePreview()">
-                            <input id="clientCompany" type="text" placeholder="Company Name (Optional)" class="form-input" oninput="updatePreview()">
-                            <textarea id="clientAddress" placeholder="Client Address" class="form-input md:col-span-2" rows="3" oninput="updatePreview()"></textarea>
-                            <input id="clientEmail" type="email" placeholder="Client Email" class="form-input" oninput="updatePreview()">
-                            <input id="clientPhone" type="tel" placeholder="Client Phone" class="form-input" oninput="updatePreview()">
+                        <div id="company-accordion-header" class="accordion-header flex justify-between items-center">
+                            <h3 class="text-xl font-semibold">Your Company Information</h3>
+                            <i id="company-chevron" class="fas fa-chevron-down chevron-icon"></i>
+                        </div>
+                        <div id="company-accordion-content" class="accordion-content mt-4">
+                            <div class="space-y-4">
+                                 <input id="companyName" type="text" placeholder="Your Company Name" class="form-input" oninput="updatePreview()" value="Anabina Construction">
+                                 <textarea id="companyAddress" placeholder="Your Company Address" class="form-input" rows="2" oninput="updatePreview()">123 Construction Ave, Bangi, Selangor</textarea>
+                                 <input id="companyContact" type="text" placeholder="Email | Phone" class="form-input" oninput="updatePreview()" value="anabina.construction@email.com | +6012-345-6789">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Information -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                             <h3 class="text-xl font-semibold">Client Information</h3>
+                             <button onclick="saveClient()" class="text-sm bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600">Save Client</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="client-select" class="block text-sm font-medium text-gray-700 mb-1">Select Existing Client</label>
+                                <select id="client-select" class="form-input" onchange="populateClientInfo(this.value)">
+                                    <option value="">-- New Client --</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input id="clientName" type="text" placeholder="Client Name" class="form-input" oninput="updatePreview()">
+                                <input id="clientCompany" type="text" placeholder="Company Name (Optional)" class="form-input" oninput="updatePreview()">
+                                <textarea id="clientAddress" placeholder="Client Address" class="form-input md:col-span-2" rows="3" oninput="updatePreview()"></textarea>
+                                <input id="clientEmail" type="email" placeholder="Client Email" class="form-input" oninput="updatePreview()">
+                                <input id="clientPhone" type="tel" placeholder="Client Phone" class="form-input" oninput="updatePreview()">
+                            </div>
                         </div>
                     </div>
 
@@ -145,9 +183,9 @@
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:justify-between items-start pb-6 border-b-2 border-gray-800">
                         <div class="mb-4 sm:mb-0">
-                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Anabina Construction</h2>
-                            <p class="text-sm text-gray-600">123 Construction Ave, Bangi, Selangor</p>
-                            <p class="text-sm text-gray-600">anabina.construction@email.com | +6012-345-6789</p>
+                            <h2 id="preview-companyName" class="text-2xl sm:text-3xl font-bold text-gray-900">Anabina Construction</h2>
+                            <p id="preview-companyAddress" class="text-sm text-gray-600 whitespace-pre-line">123 Construction Ave, Bangi, Selangor</p>
+                            <p id="preview-companyContact" class="text-sm text-gray-600">anabina.construction@email.com | +6012-345-6789</p>
                         </div>
                         <div class="w-full sm:w-auto text-left sm:text-right">
                             <h1 id="preview-docType" class="text-3xl sm:text-4xl font-bold uppercase text-gray-700">Quotation</h1>
@@ -214,7 +252,7 @@
                     <!-- Footer -->
                     <footer class="text-center mt-12 pt-4 border-t text-xs text-gray-500">
                         <p>Thank you for your business!</p>
-                        <p>Anabina Construction</p>
+                        <p id="preview-footer-companyName">Anabina Construction</p>
                     </footer>
                 </div>
             </div>
@@ -233,6 +271,18 @@
             const dueDate = new Date();
             dueDate.setDate(dueDate.getDate() + 14);
             document.getElementById('docDueDate').value = dueDate.toISOString().split('T')[0];
+
+            // Setup accordion
+            const accordionHeader = document.getElementById('company-accordion-header');
+            const accordionContent = document.getElementById('company-accordion-content');
+            const chevron = document.getElementById('company-chevron');
+            accordionHeader.addEventListener('click', () => {
+                accordionContent.classList.toggle('open');
+                chevron.classList.toggle('open');
+            });
+
+            // Load clients from localStorage
+            loadClients();
 
             addItem();
             updatePreview();
@@ -292,11 +342,20 @@
         }
 
         function updatePreview() {
+            // Update company info
+            document.getElementById('preview-companyName').textContent = document.getElementById('companyName').value;
+            document.getElementById('preview-companyAddress').textContent = document.getElementById('companyAddress').value;
+            document.getElementById('preview-companyContact').textContent = document.getElementById('companyContact').value;
+            document.getElementById('preview-footer-companyName').textContent = document.getElementById('companyName').value;
+
+            // Update client info
             document.getElementById('preview-clientName').textContent = document.getElementById('clientName').value;
             document.getElementById('preview-clientCompany').textContent = document.getElementById('clientCompany').value;
             document.getElementById('preview-clientAddress').textContent = document.getElementById('clientAddress').value;
             document.getElementById('preview-clientEmail').textContent = document.getElementById('clientEmail').value;
             document.getElementById('preview-clientPhone').textContent = document.getElementById('clientPhone').value;
+            
+            // Update document details
             document.getElementById('preview-docNumber').textContent = document.getElementById('docNumber').value;
             document.getElementById('preview-docDate').textContent = document.getElementById('docDate').value;
             document.getElementById('preview-docDueDate').textContent = document.getElementById('docDueDate').value;
@@ -349,13 +408,85 @@
             statusEl.classList.remove('hidden');
         }
 
+        // --- Client Records Functions ---
+        function getClients() {
+            return JSON.parse(localStorage.getItem('anabinaClients')) || [];
+        }
+
+        function saveClient() {
+            const clientName = document.getElementById('clientName').value.trim();
+            if (!clientName) {
+                showStatusMessage('Client Name is required to save a record.', true);
+                return;
+            }
+
+            const clients = getClients();
+            const existingClientIndex = clients.findIndex(c => c.name.toLowerCase() === clientName.toLowerCase());
+
+            const clientData = {
+                name: clientName,
+                company: document.getElementById('clientCompany').value,
+                address: document.getElementById('clientAddress').value,
+                email: document.getElementById('clientEmail').value,
+                phone: document.getElementById('clientPhone').value,
+            };
+
+            if (existingClientIndex > -1) {
+                // Update existing client
+                clients[existingClientIndex] = clientData;
+            } else {
+                // Add new client
+                clients.push(clientData);
+            }
+
+            localStorage.setItem('anabinaClients', JSON.stringify(clients));
+            loadClients(); // Refresh dropdown
+            document.getElementById('client-select').value = clientName;
+            showStatusMessage(`Client "${clientName}" saved successfully.`, false);
+        }
+
+        function loadClients() {
+            const clients = getClients();
+            const selectEl = document.getElementById('client-select');
+            selectEl.innerHTML = '<option value="">-- New Client --</option>'; // Clear existing options
+            clients.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                option.textContent = client.name;
+                selectEl.appendChild(option);
+            });
+        }
+
+        function populateClientInfo(clientName) {
+            if (!clientName) {
+                // Clear fields for new client
+                document.getElementById('clientName').value = '';
+                document.getElementById('clientCompany').value = '';
+                document.getElementById('clientAddress').value = '';
+                document.getElementById('clientEmail').value = '';
+                document.getElementById('clientPhone').value = '';
+            } else {
+                const clients = getClients();
+                const client = clients.find(c => c.name === clientName);
+                if (client) {
+                    document.getElementById('clientName').value = client.name;
+                    document.getElementById('clientCompany').value = client.company;
+                    document.getElementById('clientAddress').value = client.address;
+                    document.getElementById('clientEmail').value = client.email;
+                    document.getElementById('clientPhone').value = client.phone;
+                }
+            }
+            updatePreview();
+        }
+
+
         function saveAndPrint() {
             const actionButton = document.getElementById('action-button');
             showStatusMessage('Saving to Google Sheet...', false);
             actionButton.disabled = true;
             actionButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            // 1. Collect all data into an object
             const items = [];
             let subtotal = 0;
             document.querySelectorAll('#items-container > div').forEach(row => {
@@ -388,14 +519,10 @@
                 notes: document.getElementById('notes').value,
             };
 
-            // 2. Send data to Google Apps Script
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 cache: 'no-cache',
-                // By removing the 'Content-Type' header, we allow the browser to send
-                // it as 'text/plain', which avoids a CORS preflight request that can
-                // cause "Failed to fetch" errors with Google Apps Script.
                 body: JSON.stringify(data),
                 redirect: 'follow', 
             })
@@ -403,7 +530,6 @@
             .then(data => {
                 if (data.status === 'success') {
                     showStatusMessage('Saved successfully! Opening print dialog...', false);
-                    // 3. Print ONLY if save was successful
                     printDocument();
                 } else {
                     throw new Error(data.message || 'An unknown error occurred while saving.');
@@ -414,7 +540,6 @@
                 showStatusMessage(`Error: ${error.message}`, true);
             })
             .finally(() => {
-                // 4. Re-enable button after process is complete
                 actionButton.disabled = false;
                 actionButton.innerHTML = '<i class="fas fa-save"></i> Save & Print / PDF';
             });
