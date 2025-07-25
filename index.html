@@ -624,6 +624,7 @@
                 }
             } catch(e) {
                 console.error("Could not parse items JSON:", e);
+                addItem(); // Add a blank item if parsing fails
             }
             
             updatePreview();
@@ -658,6 +659,15 @@
         }
 
         function convertDocument(targetType) {
+            // 1. Read and store current items
+            const currentItems = [];
+            document.querySelectorAll('#items-container > div').forEach(row => {
+                const desc = row.querySelector('.item-desc').value;
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                currentItems.push({ desc, qty, price });
+            });
+
             const originalDocNumber = document.getElementById('docNumber').value;
             const originalDocType = currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
             
@@ -676,6 +686,15 @@
             // This is now a new document, not an update
             currentlyEditingRow = null; 
             document.getElementById('document-select').value = '';
+            
+            // Clear and repopulate items
+            const itemsContainer = document.getElementById('items-container');
+            itemsContainer.innerHTML = ''; // Clear existing items
+            if (currentItems.length > 0) {
+                currentItems.forEach(item => addItem(item.desc, item.qty, item.price));
+            } else {
+                addItem(); // Add one blank item if there were none
+            }
             
             updatePreview();
             updateConvertButtons(); // This will hide the convert section
