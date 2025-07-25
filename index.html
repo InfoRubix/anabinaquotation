@@ -175,6 +175,8 @@
                                 <input id="clientName" type="text" placeholder="Client Name" class="form-input" oninput="updatePreview()">
                                 <input id="clientCompany" type="text" placeholder="Client Company (Optional)" class="form-input" oninput="updatePreview()">
                                 <textarea id="clientAddress" placeholder="Client Address" class="form-input md:col-span-2" rows="3" oninput="updatePreview()"></textarea>
+                                <input id="clientEmail" type="email" placeholder="Client Email" class="form-input" oninput="updatePreview()">
+                                <input id="clientPhone" type="tel" placeholder="Client Phone" class="form-input" oninput="updatePreview()">
                             </div>
                         </div>
                     </div>
@@ -258,6 +260,8 @@
                                 <p id="preview-clientName" class="font-bold text-gray-800"></p>
                                 <p id="preview-clientCompany"></p>
                                 <p id="preview-clientAddress" class="whitespace-pre-line"></p>
+                                <p id="preview-clientEmail"></p>
+                                <p id="preview-clientPhone"></p>
                             </div>
                         </div>
 
@@ -439,6 +443,8 @@
             document.getElementById('preview-clientName').textContent = document.getElementById('clientName').value;
             document.getElementById('preview-clientCompany').textContent = document.getElementById('clientCompany').value;
             document.getElementById('preview-clientAddress').textContent = document.getElementById('clientAddress').value;
+            document.getElementById('preview-clientEmail').textContent = document.getElementById('clientEmail').value;
+            document.getElementById('preview-clientPhone').textContent = document.getElementById('clientPhone').value;
             
             // Update document details
             document.getElementById('preview-docNumber').textContent = document.getElementById('docNumber').value;
@@ -518,6 +524,8 @@
                 name: clientName,
                 company: document.getElementById('clientCompany').value,
                 address: document.getElementById('clientAddress').value,
+                email: document.getElementById('clientEmail').value,
+                phone: document.getElementById('clientPhone').value,
             };
 
             if (existingClientIndex > -1) {
@@ -551,6 +559,8 @@
                 document.getElementById('clientName').value = '';
                 document.getElementById('clientCompany').value = '';
                 document.getElementById('clientAddress').value = '';
+                document.getElementById('clientEmail').value = '';
+                document.getElementById('clientPhone').value = '';
             } else {
                 const clients = getClients();
                 const client = clients.find(c => c.name === clientName);
@@ -558,6 +568,8 @@
                     document.getElementById('clientName').value = client.name;
                     document.getElementById('clientCompany').value = client.company;
                     document.getElementById('clientAddress').value = client.address;
+                    document.getElementById('clientEmail').value = client.email || '';
+                    document.getElementById('clientPhone').value = client.phone || '';
                 }
             }
             updatePreview();
@@ -611,6 +623,8 @@
             document.getElementById('clientName').value = doc.ClientName;
             document.getElementById('clientCompany').value = doc.ClientCompany;
             document.getElementById('clientAddress').value = doc.ClientAddress;
+            document.getElementById('clientEmail').value = doc.ClientEmail || '';
+            document.getElementById('clientPhone').value = doc.ClientPhone || '';
             document.getElementById('notes').value = doc.Notes;
             document.getElementById('taxRate').value = doc.TaxRate;
 
@@ -713,6 +727,8 @@
                 clientName: document.getElementById('clientName').value,
                 clientCompany: document.getElementById('clientCompany').value,
                 clientAddress: document.getElementById('clientAddress').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                clientPhone: document.getElementById('clientPhone').value,
                 items: items,
                 subtotal: subtotal,
                 taxRate: taxRate,
