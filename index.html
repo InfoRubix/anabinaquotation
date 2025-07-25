@@ -134,6 +134,14 @@
                         </div>
                     </div>
 
+                    <!-- Convert Document -->
+                     <div id="convert-section" class="bg-white p-6 rounded-lg shadow hidden">
+                        <h3 class="text-xl font-semibold mb-2">Convert Document</h3>
+                        <p class="text-sm text-gray-600 mb-4">The current document can be converted to the next stage.</p>
+                        <div id="convert-buttons"></div>
+                    </div>
+
+
                     <!-- Your Company Information -->
                     <div class="bg-white p-6 rounded-lg shadow">
                         <div id="company-accordion-header" class="accordion-header flex justify-between items-center">
@@ -620,8 +628,59 @@
             
             updatePreview();
             showStatusMessage(`Loaded ${doc.DocumentType}: ${doc.DocumentNumber}`, false);
+            updateConvertButtons();
+        }
+        
+        function updateConvertButtons() {
+            const convertSection = document.getElementById('convert-section');
+            const convertButtons = document.getElementById('convert-buttons');
+            convertButtons.innerHTML = ''; // Clear old buttons
+
+            if (!currentlyEditingRow) {
+                convertSection.classList.add('hidden');
+                return;
+            }
+
+            let canConvert = false;
+            if (currentTab === 'quotation') {
+                canConvert = true;
+                convertButtons.innerHTML = `<button onclick="convertDocument('invoice')" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Convert to Invoice</button>`;
+            } else if (currentTab === 'invoice') {
+                canConvert = true;
+                convertButtons.innerHTML = `<button onclick="convertDocument('receipt')" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Convert to Receipt</button>`;
+            }
+
+            if (canConvert) {
+                convertSection.classList.remove('hidden');
+            } else {
+                convertSection.classList.add('hidden');
+            }
         }
 
+        function convertDocument(targetType) {
+            const originalDocNumber = document.getElementById('docNumber').value;
+            const originalDocType = currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
+            
+            // Switch to the new tab
+            switchTab(targetType);
+            
+            // Suggest new doc number and update date
+            document.getElementById('docNumber').value = originalDocNumber.replace(originalDocType.substring(0,3).toUpperCase(), targetType.substring(0,3).toUpperCase());
+            document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
+
+            // Add reference note
+            const notesField = document.getElementById('notes');
+            const referenceNote = `Based on ${originalDocType} #${originalDocNumber}`;
+            notesField.value = notesField.value ? `${referenceNote}\n${notesField.value}` : referenceNote;
+
+            // This is now a new document, not an update
+            currentlyEditingRow = null; 
+            document.getElementById('document-select').value = '';
+            
+            updatePreview();
+            updateConvertButtons(); // This will hide the convert section
+            showStatusMessage(`Converted to new ${targetType}. Please review and save.`, false);
+        }
 
         function saveAndPrint() {
             const actionButton = document.getElementById('action-button');
