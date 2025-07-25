@@ -114,7 +114,27 @@
                 </div>
 
                 <div class="space-y-6">
-                    <!-- Your Company Information (Accordion) -->
+                    <!-- Load Existing Document -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div id="load-accordion-header" class="accordion-header flex justify-between items-center">
+                            <h3 class="text-xl font-semibold">Load Existing Document</h3>
+                            <i id="load-chevron" class="fas fa-chevron-down chevron-icon"></i>
+                        </div>
+                        <div id="load-accordion-content" class="accordion-content mt-4">
+                            <div class="space-y-2">
+                                <label for="document-select" class="block text-sm font-medium text-gray-700">Select a document to edit:</label>
+                                <select id="document-select" class="form-input">
+                                    <option value="">Loading documents...</option>
+                                </select>
+                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                    <button onclick="loadSelectedDocument()" class="w-full py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700">Load Document</button>
+                                    <button onclick="location.reload()" class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">New Document</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Your Company Information -->
                     <div class="bg-white p-6 rounded-lg shadow">
                         <div id="company-accordion-header" class="accordion-header flex justify-between items-center">
                             <h3 class="text-xl font-semibold">Your Company Information</h3>
@@ -312,27 +332,35 @@
     <script>
         let currentTab = 'quotation';
         let itemCounter = 0;
+        let allDocuments = [];
+        let currentlyEditingRow = null;
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUUn8swHtrQR2LCp7RyLS_CntTreM41fXwEmERlAFY4GBLj3UdiT_rkaf30mV_aASubg/exec";
 
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             document.getElementById('docDate').value = today.toISOString().split('T')[0];
             
-            // Setup accordion
-            const accordionHeader = document.getElementById('company-accordion-header');
-            const accordionContent = document.getElementById('company-accordion-content');
-            const chevron = document.getElementById('company-chevron');
-            accordionHeader.addEventListener('click', () => {
-                accordionContent.classList.toggle('open');
-                chevron.classList.toggle('open');
-            });
+            // Setup accordions
+            setupAccordion('company-accordion-header', 'company-accordion-content', 'company-chevron');
+            setupAccordion('load-accordion-header', 'load-accordion-content', 'load-chevron');
 
-            // Load clients from localStorage
+            // Load clients and documents
             loadClients();
+            fetchDocuments();
 
             addItem();
             updatePreview();
         });
+
+        function setupAccordion(headerId, contentId, chevronId) {
+             const accordionHeader = document.getElementById(headerId);
+            const accordionContent = document.getElementById(contentId);
+            const chevron = document.getElementById(chevronId);
+            accordionHeader.addEventListener('click', () => {
+                accordionContent.classList.toggle('open');
+                chevron.classList.toggle('open');
+            });
+        }
 
         function switchTab(tabName) {
             currentTab = tabName;
@@ -373,16 +401,16 @@
             updatePreview();
         }
 
-        function addItem() {
+        function addItem(desc = '', qty = 1, price = 0) {
             itemCounter++;
             const itemsContainer = document.getElementById('items-container');
             const itemRow = document.createElement('div');
             itemRow.classList.add('grid', 'grid-cols-12', 'gap-2', 'items-center');
             itemRow.id = `item-row-${itemCounter}`;
             itemRow.innerHTML = `
-                <input type="text" placeholder="Item / Service Description" class="form-input col-span-12 md:col-span-5 item-desc" oninput="updatePreview()">
-                <input type="number" value="1" min="0" placeholder="Qty" class="form-input col-span-4 md:col-span-2 item-qty" oninput="updatePreview()">
-                <input type="number" value="0" min="0" step="0.01" placeholder="Price" class="form-input col-span-4 md:col-span-3 item-price" oninput="updatePreview()">
+                <input type="text" placeholder="Item / Service Description" class="form-input col-span-12 md:col-span-5 item-desc" value="${desc}" oninput="updatePreview()">
+                <input type="number" value="${qty}" min="0" placeholder="Qty" class="form-input col-span-4 md:col-span-2 item-qty" oninput="updatePreview()">
+                <input type="number" value="${price}" min="0" step="0.01" placeholder="Price" class="form-input col-span-4 md:col-span-3 item-price" oninput="updatePreview()">
                 <button onclick="removeItem(${itemCounter})" class="bg-red-600 hover:bg-red-700 text-white rounded-md h-10 col-span-4 md:col-span-2 flex items-center justify-center"><i class="fas fa-trash-alt"></i></button>
             `;
             itemsContainer.appendChild(itemRow);
@@ -527,6 +555,73 @@
             updatePreview();
         }
 
+        // --- Document Loading/Saving ---
+
+        function fetchDocuments() {
+            fetch(SCRIPT_URL)
+                .then(res => res.json())
+                .then(response => {
+                    if (response.status === 'success') {
+                        allDocuments = response.data;
+                        populateDocumentSelect();
+                    } else {
+                        throw new Error(response.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching documents:', error);
+                    const docSelect = document.getElementById('document-select');
+                    docSelect.innerHTML = '<option value="">Error loading documents</option>';
+                });
+        }
+
+        function populateDocumentSelect() {
+            const docSelect = document.getElementById('document-select');
+            docSelect.innerHTML = '<option value="">-- Select a document --</option>';
+            allDocuments.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.rowNumber;
+                option.textContent = `${doc.DocumentType}: ${doc.DocumentNumber} (${doc.ClientName})`;
+                docSelect.appendChild(option);
+            });
+        }
+        
+        function loadSelectedDocument() {
+            const selectedRowNumber = document.getElementById('document-select').value;
+            if (!selectedRowNumber) return;
+
+            const doc = allDocuments.find(d => d.rowNumber == selectedRowNumber);
+            if (!doc) return;
+
+            currentlyEditingRow = doc.rowNumber;
+
+            // Populate form fields
+            switchTab(doc.DocumentType);
+            document.getElementById('docNumber').value = doc.DocumentNumber;
+            document.getElementById('docDate').value = new Date(doc.DocumentDate).toISOString().split('T')[0];
+            document.getElementById('docDueDate').value = doc.DueDate;
+            document.getElementById('clientName').value = doc.ClientName;
+            document.getElementById('clientCompany').value = doc.ClientCompany;
+            document.getElementById('clientAddress').value = doc.ClientAddress;
+            document.getElementById('notes').value = doc.Notes;
+            document.getElementById('taxRate').value = doc.TaxRate;
+
+            // Populate items
+            const itemsContainer = document.getElementById('items-container');
+            itemsContainer.innerHTML = ''; // Clear existing items
+            try {
+                const items = JSON.parse(doc.ItemsJSON);
+                if (Array.isArray(items)) {
+                    items.forEach(item => addItem(item.desc, item.qty, item.price));
+                }
+            } catch(e) {
+                console.error("Could not parse items JSON:", e);
+            }
+            
+            updatePreview();
+            showStatusMessage(`Loaded ${doc.DocumentType}: ${doc.DocumentNumber}`, false);
+        }
+
 
         function saveAndPrint() {
             const actionButton = document.getElementById('action-button');
@@ -548,7 +643,7 @@
             const taxAmount = subtotal * (taxRate / 100);
             const totalAmount = subtotal + taxAmount;
 
-            const data = {
+            const docData = {
                 documentType: currentTab,
                 documentNumber: document.getElementById('docNumber').value,
                 documentDate: document.getElementById('docDate').value,
@@ -563,18 +658,26 @@
                 totalAmount: totalAmount,
                 notes: document.getElementById('notes').value,
             };
+            
+            const payload = {
+                action: currentlyEditingRow ? 'update' : 'create',
+                rowNumber: currentlyEditingRow,
+                data: docData
+            };
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 cache: 'no-cache',
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
                 redirect: 'follow', 
             })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    showStatusMessage('Saved successfully! Opening print dialog...', false);
+                    showStatusMessage(data.message + ' Opening print dialog...', false);
+                    currentlyEditingRow = null; // Reset editing state
+                    fetchDocuments(); // Refresh the list
                     printDocument();
                 } else {
                     throw new Error(data.message || 'An unknown error occurred while saving.');
