@@ -659,19 +659,14 @@
         }
 
         function convertDocument(targetType) {
-            // 1. Read and store current items
-            const currentItems = [];
-            document.querySelectorAll('#items-container > div').forEach(row => {
-                const desc = row.querySelector('.item-desc').value;
-                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-                const price = parseFloat(row.querySelector('.item-price').value) || 0;
-                currentItems.push({ desc, qty, price });
-            });
-
             const originalDocNumber = document.getElementById('docNumber').value;
             const originalDocType = currentTab.charAt(0).toUpperCase() + currentTab.slice(1);
             
-            // Switch to the new tab
+            // This is now a new document, not an update
+            currentlyEditingRow = null; 
+            document.getElementById('document-select').value = '';
+            
+            // Switch to the new tab UI
             switchTab(targetType);
             
             // Suggest new doc number and update date
@@ -681,21 +676,10 @@
             // Add reference note
             const notesField = document.getElementById('notes');
             const referenceNote = `Based on ${originalDocType} #${originalDocNumber}`;
-            notesField.value = notesField.value ? `${referenceNote}\n${notesField.value}` : referenceNote;
+            const existingNotes = notesField.value.split('\n').filter(line => !line.startsWith('Based on')).join('\n');
+            notesField.value = existingNotes ? `${referenceNote}\n${existingNotes}` : referenceNote;
 
-            // This is now a new document, not an update
-            currentlyEditingRow = null; 
-            document.getElementById('document-select').value = '';
-            
-            // Clear and repopulate items
-            const itemsContainer = document.getElementById('items-container');
-            itemsContainer.innerHTML = ''; // Clear existing items
-            if (currentItems.length > 0) {
-                currentItems.forEach(item => addItem(item.desc, item.qty, item.price));
-            } else {
-                addItem(); // Add one blank item if there were none
-            }
-            
+            // The items are already in the form fields, so we just need to trigger a final update.
             updatePreview();
             updateConvertButtons(); // This will hide the convert section
             showStatusMessage(`Converted to new ${targetType}. Please review and save.`, false);
