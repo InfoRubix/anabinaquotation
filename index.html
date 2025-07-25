@@ -124,6 +124,7 @@
                             <div class="space-y-4">
                                  <input id="companyName" type="text" placeholder="Your Company Name" class="form-input" oninput="updatePreview()" value="ANABINA CONSTRUCTION">
                                  <textarea id="companyAddress" placeholder="Your Company Address" class="form-input" rows="3" oninput="updatePreview()">1-21, Jalan 8/35, Seksyen 8, Seri Bangi,\n43650, Bandar Baru Bangi, Selangor</textarea>
+                                 <input id="companySsm" type="text" placeholder="Your SSM No." class="form-input" oninput="updatePreview()" value="SSM: 201701020376 (1234541T)">
                                  <input id="companyEmail" type="email" placeholder="Your Company Email" class="form-input" oninput="updatePreview()" value="info.anabina@gmail.com">
                             </div>
                         </div>
@@ -197,6 +198,7 @@
                             <div class="logo-container">
                                 <img src="https://i.ibb.co/hFD9T7Tv/270-logo-anabina-pjg-02.png" alt="Anabina Construction Logo" class="w-48">
                                 <div class="text-xs text-gray-600 mt-2">
+                                    <p id="preview-companySsm"></p>
                                     <p id="preview-companyAddress" class="whitespace-pre-line"></p>
                                 </div>
                             </div>
@@ -394,6 +396,7 @@
         function updatePreview() {
             // Update company info
             document.getElementById('preview-companyAddress').textContent = document.getElementById('companyAddress').value;
+            document.getElementById('preview-companySsm').textContent = document.getElementById('companySsm').value;
             document.getElementById('preview-companyEmail').textContent = document.getElementById('companyEmail').value;
 
             // Update client info
