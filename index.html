@@ -10,14 +10,17 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
         }
         .document-container {
             border: 1px solid #e5e7eb;
-            padding: 2rem;
             background-color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         @media print {
+            body {
+                background-color: white;
+            }
             body * {
                 visibility: hidden;
             }
@@ -29,13 +32,12 @@
                 left: 0;
                 top: 0;
                 width: 100%;
+                border: none;
+                box-shadow: none;
             }
             .no-print {
                 display: none;
             }
-        }
-        .tab-button {
-            transition: all 0.3s ease;
         }
         .tab-button.active {
             border-bottom-color: #1d4ed8;
@@ -79,6 +81,15 @@
         }
         .chevron-icon { transition: transform 0.3s ease; }
         .chevron-icon.open { transform: rotate(180deg); }
+
+        /* New Design Styles */
+        .brand-header {
+            background-color: #005842; /* Dark green from PDF */
+            height: 8px;
+        }
+        .invoice-details-table td {
+            padding: 2px 0;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -98,6 +109,7 @@
                         <button onclick="switchTab('quotation')" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="quotation">Quotation</button>
                         <button onclick="switchTab('invoice')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="invoice">Invoice</button>
                         <button onclick="switchTab('receipt')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="receipt">Receipt</button>
+                        <button onclick="switchTab('purchase-order')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="purchase-order">Purchase Order</button>
                     </nav>
                 </div>
 
@@ -110,9 +122,9 @@
                         </div>
                         <div id="company-accordion-content" class="accordion-content mt-4">
                             <div class="space-y-4">
-                                 <input id="companyName" type="text" placeholder="Your Company Name" class="form-input" oninput="updatePreview()" value="Anabina Construction">
-                                 <textarea id="companyAddress" placeholder="Your Company Address" class="form-input" rows="2" oninput="updatePreview()">123 Construction Ave, Bangi, Selangor</textarea>
-                                 <input id="companyContact" type="text" placeholder="Email | Phone" class="form-input" oninput="updatePreview()" value="anabina.construction@email.com | +6012-345-6789">
+                                 <input id="companyName" type="text" placeholder="Your Company Name" class="form-input" oninput="updatePreview()" value="ANABINA CONSTRUCTION">
+                                 <textarea id="companyAddress" placeholder="Your Company Address" class="form-input" rows="3" oninput="updatePreview()">1-21, Jalan 8/35, Seksyen 8, Seri Bangi,\n43650, Bandar Baru Bangi, Selangor</textarea>
+                                 <input id="companyEmail" type="email" placeholder="Your Company Email" class="form-input" oninput="updatePreview()" value="info.anabina@gmail.com">
                             </div>
                         </div>
                     </div>
@@ -132,10 +144,8 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <input id="clientName" type="text" placeholder="Client Name" class="form-input" oninput="updatePreview()">
-                                <input id="clientCompany" type="text" placeholder="Company Name (Optional)" class="form-input" oninput="updatePreview()">
+                                <input id="clientCompany" type="text" placeholder="Client Company (Optional)" class="form-input" oninput="updatePreview()">
                                 <textarea id="clientAddress" placeholder="Client Address" class="form-input md:col-span-2" rows="3" oninput="updatePreview()"></textarea>
-                                <input id="clientEmail" type="email" placeholder="Client Email" class="form-input" oninput="updatePreview()">
-                                <input id="clientPhone" type="tel" placeholder="Client Phone" class="form-input" oninput="updatePreview()">
                             </div>
                         </div>
                     </div>
@@ -145,7 +155,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input id="docNumber" type="text" placeholder="Quotation #" class="form-input" oninput="updatePreview()">
                             <input id="docDate" type="date" class="form-input" oninput="updatePreview()">
-                            <input id="docDueDate" type="date" class="form-input" oninput="updatePreview()">
+                            <input id="docDueDate" type="text" placeholder="Validity (e.g., 7 Days)" class="form-input" oninput="updatePreview()" value="7 Days">
                         </div>
                     </div>
 
@@ -159,11 +169,11 @@
                     
                      <div class="bg-white p-6 rounded-lg shadow">
                         <h3 class="text-xl font-semibold mb-4 border-b pb-2">Notes & Summary</h3>
-                        <textarea id="notes" placeholder="Add any notes here (e.g., terms and conditions)" class="form-input w-full" rows="4" oninput="updatePreview()"></textarea>
+                        <textarea id="notes" placeholder="Add any notes here" class="form-input w-full" rows="4" oninput="updatePreview()"></textarea>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div class="flex items-center gap-2">
                                 <label for="taxRate" class="font-medium">Tax Rate (%):</label>
-                                <input id="taxRate" type="number" value="6" min="0" class="form-input w-24" oninput="updatePreview()">
+                                <input id="taxRate" type="number" value="0" min="0" class="form-input w-24" oninput="updatePreview()">
                             </div>
                          </div>
                     </div>
@@ -179,81 +189,119 @@
             </div>
 
             <div id="document-preview-container" class="lg:h-full">
-                <div id="document-preview" class="document-container">
-                    <!-- Header -->
-                    <div class="flex flex-col sm:flex-row sm:justify-between items-start pb-6 border-b-2 border-gray-800">
-                        <div class="mb-4 sm:mb-0">
-                            <h2 id="preview-companyName" class="text-2xl sm:text-3xl font-bold text-gray-900">Anabina Construction</h2>
-                            <p id="preview-companyAddress" class="text-sm text-gray-600 whitespace-pre-line">123 Construction Ave, Bangi, Selangor</p>
-                            <p id="preview-companyContact" class="text-sm text-gray-600">anabina.construction@email.com | +6012-345-6789</p>
-                        </div>
-                        <div class="w-full sm:w-auto text-left sm:text-right">
-                            <h1 id="preview-docType" class="text-3xl sm:text-4xl font-bold uppercase text-gray-700">Quotation</h1>
-                            <p class="mt-1"><strong>#:</strong> <span id="preview-docNumber"></span></p>
-                        </div>
-                    </div>
-
-                    <!-- Client and Date Info -->
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-1">Bill To:</h4>
-                            <p id="preview-clientName" class="font-bold"></p>
-                            <p id="preview-clientCompany"></p>
-                            <p id="preview-clientAddress" class="whitespace-pre-line"></p>
-                            <p id="preview-clientEmail"></p>
-                            <p id="preview-clientPhone"></p>
-                        </div>
-                        <div class="text-right">
-                            <p><strong>Date:</strong> <span id="preview-docDate"></span></p>
-                            <p id="preview-dueDate-container"><strong>Due Date:</strong> <span id="preview-docDueDate"></span></p>
-                            <p id="preview-paid-stamp" class="hidden text-green-600 font-bold text-2xl mt-4 border-4 border-green-600 p-2 inline-block -rotate-12">PAID</p>
-                        </div>
-                    </div>
-
-                    <!-- Items Table -->
-                    <div class="mt-8">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="bg-gray-800 text-white">
-                                    <th class="p-3 font-semibold">Description</th>
-                                    <th class="p-3 font-semibold text-right">Quantity</th>
-                                    <th class="p-3 font-semibold text-right">Unit Price</th>
-                                    <th class="p-3 font-semibold text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="preview-items-body"></tbody>
-                        </table>
-                    </div>
-
-                    <!-- Totals -->
-                    <div class="flex justify-end mt-6">
-                        <div class="w-full max-w-xs space-y-2">
-                            <div class="flex justify-between">
-                                <span class="font-semibold">Subtotal:</span>
-                                <span id="preview-subtotal">RM 0.00</span>
+                <div id="document-preview" class="document-container p-0 text-sm">
+                    <div class="brand-header"></div>
+                    <div class="p-8 md:p-12">
+                        <!-- Header -->
+                        <div class="flex justify-between items-start">
+                            <div class="logo-container">
+                                <img src="https://i.ibb.co/hFD9T7Tv/270-logo-anabina-pjg-02.png" alt="Anabina Construction Logo" class="w-48">
+                                <div class="text-xs text-gray-600 mt-2">
+                                    <p id="preview-companyAddress" class="whitespace-pre-line"></p>
+                                </div>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold">Tax (<span id="preview-taxRate">6</span>%):</span>
-                                <span id="preview-taxAmount">RM 0.00</span>
-                            </div>
-                            <div class="flex justify-between text-xl font-bold border-t-2 border-gray-800 pt-2 mt-2">
-                                <span>Total:</span>
-                                <span id="preview-total">RM 0.00</span>
+                            <div class="text-right">
+                                <h1 id="preview-docType" class="text-2xl font-bold uppercase text-gray-800">Invoice</h1>
+                                <table class="invoice-details-table mt-2 text-xs text-gray-600">
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-semibold pr-4">NO:</td>
+                                            <td id="preview-docNumber"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-semibold pr-4">Date:</td>
+                                            <td id="preview-docDate"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-semibold pr-4">Due Date:</td>
+                                            <td id="preview-docDueDate"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Notes -->
-                    <div class="mt-8 border-t pt-4">
-                        <h4 class="font-semibold text-gray-700 mb-1">Notes:</h4>
-                        <p id="preview-notes" class="text-sm text-gray-600 whitespace-pre-line"></p>
-                    </div>
+                        <!-- Client Info -->
+                        <div class="mt-10">
+                            <p class="font-semibold text-gray-700 text-xs">Bill To:</p>
+                            <div class="text-gray-600 text-xs mt-1">
+                                <p id="preview-clientName" class="font-bold text-gray-800"></p>
+                                <p id="preview-clientCompany"></p>
+                                <p id="preview-clientAddress" class="whitespace-pre-line"></p>
+                            </div>
+                        </div>
 
+                        <!-- Items Table -->
+                        <div class="mt-8">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-gray-800 text-white text-xs">
+                                        <th class="p-2 font-semibold rounded-l-lg">Description</th>
+                                        <th class="p-2 font-semibold text-right">Qty</th>
+                                        <th class="p-2 font-semibold text-right">Price</th>
+                                        <th class="p-2 font-semibold text-right rounded-r-lg">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="preview-items-body" class="text-xs text-gray-700">
+                                    <!-- Preview items will be injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="flex justify-end mt-6">
+                            <div class="w-full max-w-xs space-y-2">
+                                <div class="flex justify-between text-xs">
+                                    <span class="font-semibold">Subtotal:</span>
+                                    <span id="preview-subtotal">RM 0.00</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="font-semibold">Tax (<span id="preview-taxRate">0</span>%):</span>
+                                    <span id="preview-taxAmount">RM 0.00</span>
+                                </div>
+                                <div class="flex justify-between text-base font-bold border-t-2 border-gray-800 pt-2 mt-2">
+                                    <span>Total:</span>
+                                    <span id="preview-total">RM 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mt-10">
+                             <p class="font-semibold text-gray-700 text-xs">Notes:</p>
+                             <p id="preview-notes" class="text-xs text-gray-600 whitespace-pre-line mt-1"></p>
+                        </div>
+                    </div>
                     <!-- Footer -->
-                    <footer class="text-center mt-12 pt-4 border-t text-xs text-gray-500">
-                        <p>Thank you for your business!</p>
-                        <p id="preview-footer-companyName">Anabina Construction</p>
-                    </footer>
+                    <div id="payment-footer" class="bg-gray-100 p-8 md:p-12 mt-12 text-xs">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Payment Information:</h4>
+                            <p class="text-gray-500 mb-2">Anabina Construction is formerly known as Double ZS Development Sdn Bhd.</p>
+                            <table class="text-gray-600 mb-8">
+                                <tbody>
+                                    <tr>
+                                        <td class="font-semibold pr-4">Account Name:</td>
+                                        <td>DOUBLE ZS DEVELOPMENT SDN BHD</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold pr-4">Bank:</td>
+                                        <td>Maybank</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold pr-4">Account No:</td>
+                                        <td>562263602346</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold pr-4">Email:</td>
+                                        <td id="preview-companyEmail">info.anabina@gmail.com</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="text-right">
+                                <p class="font-bold text-base">Thank You</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,13 +313,9 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUUn8swHtrQR2LCp7RyLS_CntTreM41fXwEmERlAFY4GBLj3UdiT_rkaf30mV_aASubg/exec";
 
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('docDate').value = today;
+            const today = new Date();
+            document.getElementById('docDate').value = today.toISOString().split('T')[0];
             
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + 14);
-            document.getElementById('docDueDate').value = dueDate.toISOString().split('T')[0];
-
             // Setup accordion
             const accordionHeader = document.getElementById('company-accordion-header');
             const accordionContent = document.getElementById('company-accordion-content');
@@ -292,9 +336,9 @@
             currentTab = tabName;
             const docNumberInput = document.getElementById('docNumber');
             const previewDocType = document.getElementById('preview-docType');
-            const dueDateContainer = document.getElementById('preview-dueDate-container');
-            const paidStamp = document.getElementById('preview-paid-stamp');
-
+            const previewDueDateLabel = document.querySelector('#document-preview .invoice-details-table tr:nth-child(3) td:first-child');
+            const paymentFooter = document.getElementById('payment-footer');
+            
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-button[data-type="${tabName}"]`).classList.add('active');
 
@@ -302,20 +346,26 @@
                 case 'quotation':
                     docNumberInput.placeholder = "Quotation #";
                     previewDocType.textContent = "Quotation";
-                    dueDateContainer.style.display = 'block';
-                    paidStamp.classList.add('hidden');
+                    previewDueDateLabel.textContent = "Validity:";
+                    paymentFooter.style.display = 'block';
                     break;
                 case 'invoice':
                     docNumberInput.placeholder = "Invoice #";
                     previewDocType.textContent = "Invoice";
-                    dueDateContainer.style.display = 'block';
-                    paidStamp.classList.add('hidden');
+                    previewDueDateLabel.textContent = "Due Date:";
+                    paymentFooter.style.display = 'block';
                     break;
                 case 'receipt':
                     docNumberInput.placeholder = "Receipt #";
                     previewDocType.textContent = "Receipt";
-                    dueDateContainer.style.display = 'none';
-                    paidStamp.classList.remove('hidden');
+                    previewDueDateLabel.textContent = "Payment Date:";
+                    paymentFooter.style.display = 'none';
+                    break;
+                case 'purchase-order':
+                    docNumberInput.placeholder = "PO #"
+                    previewDocType.textContent = "Purchase Order";
+                    previewDueDateLabel.textContent = "Delivery Date:";
+                    paymentFooter.style.display = 'none';
                     break;
             }
             updatePreview();
@@ -328,7 +378,7 @@
             itemRow.classList.add('grid', 'grid-cols-12', 'gap-2', 'items-center');
             itemRow.id = `item-row-${itemCounter}`;
             itemRow.innerHTML = `
-                <input type="text" placeholder="Item/Service Description" class="form-input col-span-12 md:col-span-5 item-desc" oninput="updatePreview()">
+                <input type="text" placeholder="Item / Service Description" class="form-input col-span-12 md:col-span-5 item-desc" oninput="updatePreview()">
                 <input type="number" value="1" min="0" placeholder="Qty" class="form-input col-span-4 md:col-span-2 item-qty" oninput="updatePreview()">
                 <input type="number" value="0" min="0" step="0.01" placeholder="Price" class="form-input col-span-4 md:col-span-3 item-price" oninput="updatePreview()">
                 <button onclick="removeItem(${itemCounter})" class="bg-red-600 hover:bg-red-700 text-white rounded-md h-10 col-span-4 md:col-span-2 flex items-center justify-center"><i class="fas fa-trash-alt"></i></button>
@@ -343,21 +393,23 @@
 
         function updatePreview() {
             // Update company info
-            document.getElementById('preview-companyName').textContent = document.getElementById('companyName').value;
             document.getElementById('preview-companyAddress').textContent = document.getElementById('companyAddress').value;
-            document.getElementById('preview-companyContact').textContent = document.getElementById('companyContact').value;
-            document.getElementById('preview-footer-companyName').textContent = document.getElementById('companyName').value;
+            document.getElementById('preview-companyEmail').textContent = document.getElementById('companyEmail').value;
 
             // Update client info
             document.getElementById('preview-clientName').textContent = document.getElementById('clientName').value;
             document.getElementById('preview-clientCompany').textContent = document.getElementById('clientCompany').value;
             document.getElementById('preview-clientAddress').textContent = document.getElementById('clientAddress').value;
-            document.getElementById('preview-clientEmail').textContent = document.getElementById('clientEmail').value;
-            document.getElementById('preview-clientPhone').textContent = document.getElementById('clientPhone').value;
             
             // Update document details
             document.getElementById('preview-docNumber').textContent = document.getElementById('docNumber').value;
-            document.getElementById('preview-docDate').textContent = document.getElementById('docDate').value;
+            const dateValue = document.getElementById('docDate').value;
+            if (dateValue) {
+                const [year, month, day] = dateValue.split('-');
+                document.getElementById('preview-docDate').textContent = `${day}/${month}/${year}`;
+            } else {
+                 document.getElementById('preview-docDate').textContent = '';
+            }
             document.getElementById('preview-docDueDate').textContent = document.getElementById('docDueDate').value;
             document.getElementById('preview-notes').textContent = document.getElementById('notes').value;
 
@@ -375,10 +427,10 @@
                 const previewRow = document.createElement('tr');
                 previewRow.classList.add('border-b');
                 previewRow.innerHTML = `
-                    <td class="p-3">${desc || '...'}</td>
-                    <td class="p-3 text-right">${qty}</td>
-                    <td class="p-3 text-right">${formatCurrency(price)}</td>
-                    <td class="p-3 text-right">${formatCurrency(total)}</td>
+                    <td class="p-2">${desc || '...'}</td>
+                    <td class="p-2 text-right">${qty}</td>
+                    <td class="p-2 text-right">${formatCurrency(price)}</td>
+                    <td class="p-2 text-right font-semibold">${formatCurrency(total)}</td>
                 `;
                 itemsBody.appendChild(previewRow);
             });
@@ -427,15 +479,11 @@
                 name: clientName,
                 company: document.getElementById('clientCompany').value,
                 address: document.getElementById('clientAddress').value,
-                email: document.getElementById('clientEmail').value,
-                phone: document.getElementById('clientPhone').value,
             };
 
             if (existingClientIndex > -1) {
-                // Update existing client
                 clients[existingClientIndex] = clientData;
             } else {
-                // Add new client
                 clients.push(clientData);
             }
 
@@ -464,8 +512,6 @@
                 document.getElementById('clientName').value = '';
                 document.getElementById('clientCompany').value = '';
                 document.getElementById('clientAddress').value = '';
-                document.getElementById('clientEmail').value = '';
-                document.getElementById('clientPhone').value = '';
             } else {
                 const clients = getClients();
                 const client = clients.find(c => c.name === clientName);
@@ -473,8 +519,6 @@
                     document.getElementById('clientName').value = client.name;
                     document.getElementById('clientCompany').value = client.company;
                     document.getElementById('clientAddress').value = client.address;
-                    document.getElementById('clientEmail').value = client.email;
-                    document.getElementById('clientPhone').value = client.phone;
                 }
             }
             updatePreview();
@@ -509,8 +553,6 @@
                 clientName: document.getElementById('clientName').value,
                 clientCompany: document.getElementById('clientCompany').value,
                 clientAddress: document.getElementById('clientAddress').value,
-                clientEmail: document.getElementById('clientEmail').value,
-                clientPhone: document.getElementById('clientPhone').value,
                 items: items,
                 subtotal: subtotal,
                 taxRate: taxRate,
