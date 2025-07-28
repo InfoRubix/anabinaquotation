@@ -18,12 +18,15 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <!-- Header -->
-        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 relative">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
                 <p class="text-gray-600">Anabina Construction Analytics</p>
             </div>
-            <div class="text-sm text-gray-500 mt-2 sm:mt-0">
+             <a href="index.html" class="absolute top-0 right-0 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">
+                Back to Generator
+            </a>
+            <div class="text-sm text-gray-500 mt-12 sm:mt-0">
                 <p>Last updated: <span id="last-updated">...</span></p>
             </div>
         </header>
