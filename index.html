@@ -110,6 +110,7 @@
                         <button onclick="switchTab('invoice')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="invoice">Invoice</button>
                         <button onclick="switchTab('receipt')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="receipt">Receipt</button>
                         <button onclick="switchTab('purchase-order')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="purchase-order">Purchase Order</button>
+                        <button onclick="switchTab('claim')" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent" data-type="claim">Claim</button>
                     </nav>
                 </div>
 
@@ -158,10 +159,10 @@
                         </div>
                     </div>
 
-                    <!-- Client Information -->
+                    <!-- Client/Staff Information -->
                     <div class="bg-white p-6 rounded-lg shadow">
                         <div class="flex justify-between items-center mb-4 border-b pb-2">
-                             <h3 class="text-xl font-semibold">Client Information</h3>
+                             <h3 id="client-form-header" class="text-xl font-semibold">Client Information</h3>
                              <button onclick="saveClient()" class="text-sm bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600">Save Client</button>
                         </div>
                         <div class="space-y-4">
@@ -245,7 +246,7 @@
                                             <td id="preview-docDate"></td>
                                         </tr>
                                         <tr>
-                                            <td class="font-semibold pr-4">Due Date:</td>
+                                            <td id="preview-dueDateLabel" class="font-semibold pr-4">Due Date:</td>
                                             <td id="preview-docDueDate"></td>
                                         </tr>
                                     </tbody>
@@ -255,7 +256,7 @@
 
                         <!-- Client Info -->
                         <div class="mt-10">
-                            <p class="font-semibold text-gray-700 text-xs">Bill To:</p>
+                            <p id="preview-client-header" class="font-semibold text-gray-700 text-xs">Bill To:</p>
                             <div class="text-gray-600 text-xs mt-1">
                                 <p id="preview-clientName" class="font-bold text-gray-800"></p>
                                 <p id="preview-clientCompany"></p>
@@ -345,6 +346,7 @@
         let currentTab = 'quotation';
         let itemCounter = 0;
         let allDocuments = [];
+        let allClients = [];
         let currentlyEditingRow = null;
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUUn8swHtrQR2LCp7RyLS_CntTreM41fXwEmERlAFY4GBLj3UdiT_rkaf30mV_aASubg/exec";
 
@@ -357,7 +359,7 @@
             setupAccordion('load-accordion-header', 'load-accordion-content', 'load-chevron');
 
             // Load clients and documents
-            loadClients();
+            fetchClients();
             fetchDocuments();
 
             addItem();
@@ -378,24 +380,29 @@
             currentTab = tabName;
             const docNumberInput = document.getElementById('docNumber');
             const previewDocType = document.getElementById('preview-docType');
-            const previewDueDateLabel = document.querySelector('#document-preview .invoice-details-table tr:nth-child(3) td:first-child');
+            const previewDueDateLabel = document.getElementById('preview-dueDateLabel');
             const paymentFooter = document.getElementById('payment-footer');
+            const clientFormHeader = document.getElementById('client-form-header');
+            const previewClientHeader = document.getElementById('preview-client-header');
             
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-button[data-type="${tabName}"]`).classList.add('active');
+
+            // Reset to default labels first
+            clientFormHeader.textContent = "Client Information";
+            previewClientHeader.textContent = "Bill To:";
+            previewDueDateLabel.textContent = "Due Date:";
+            paymentFooter.style.display = 'block';
 
             switch(tabName) {
                 case 'quotation':
                     docNumberInput.placeholder = "Quotation #";
                     previewDocType.textContent = "Quotation";
                     previewDueDateLabel.textContent = "Validity:";
-                    paymentFooter.style.display = 'block';
                     break;
                 case 'invoice':
                     docNumberInput.placeholder = "Invoice #";
                     previewDocType.textContent = "Invoice";
-                    previewDueDateLabel.textContent = "Due Date:";
-                    paymentFooter.style.display = 'block';
                     break;
                 case 'receipt':
                     docNumberInput.placeholder = "Receipt #";
@@ -404,9 +411,17 @@
                     paymentFooter.style.display = 'none';
                     break;
                 case 'purchase-order':
-                    docNumberInput.placeholder = "PO #"
+                    docNumberInput.placeholder = "PO #";
                     previewDocType.textContent = "Purchase Order";
                     previewDueDateLabel.textContent = "Delivery Date:";
+                    paymentFooter.style.display = 'none';
+                    break;
+                case 'claim':
+                    docNumberInput.placeholder = "Claim #";
+                    previewDocType.textContent = "Claim";
+                    previewDueDateLabel.textContent = "Claim Date:";
+                    clientFormHeader.textContent = "Staff Information";
+                    previewClientHeader.textContent = "Claimant:";
                     paymentFooter.style.display = 'none';
                     break;
             }
@@ -506,8 +521,34 @@
         }
 
         // --- Client Records Functions ---
-        function getClients() {
-            return JSON.parse(localStorage.getItem('anabinaClients')) || [];
+        function fetchClients() {
+            fetch(SCRIPT_URL + '?action=getClients')
+                .then(res => res.json())
+                .then(response => {
+                    if (response.status === 'success') {
+                        allClients = response.data;
+                        populateClientSelect();
+                    } else {
+                        throw new Error(response.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching clients:', error);
+                    const clientSelect = document.getElementById('client-select');
+                    clientSelect.innerHTML = '<option value="">Error loading clients</option>';
+                });
+        }
+
+        function populateClientSelect() {
+            const selectEl = document.getElementById('client-select');
+            selectEl.innerHTML = '<option value="">-- New Client --</option>'; // Clear existing options
+            allClients.sort((a, b) => a.ClientName.localeCompare(b.ClientName)); // Sort alphabetically
+            allClients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.ClientName;
+                option.textContent = client.ClientName;
+                selectEl.appendChild(option);
+            });
         }
 
         function saveClient() {
@@ -517,9 +558,6 @@
                 return;
             }
 
-            const clients = getClients();
-            const existingClientIndex = clients.findIndex(c => c.name.toLowerCase() === clientName.toLowerCase());
-
             const clientData = {
                 name: clientName,
                 company: document.getElementById('clientCompany').value,
@@ -528,28 +566,32 @@
                 phone: document.getElementById('clientPhone').value,
             };
 
-            if (existingClientIndex > -1) {
-                clients[existingClientIndex] = clientData;
-            } else {
-                clients.push(clientData);
-            }
+            const payload = {
+                action: 'saveClient',
+                data: clientData
+            };
+            
+            showStatusMessage('Saving client...', false);
 
-            localStorage.setItem('anabinaClients', JSON.stringify(clients));
-            loadClients(); // Refresh dropdown
-            document.getElementById('client-select').value = clientName;
-            showStatusMessage(`Client "${clientName}" saved successfully.`, false);
-        }
-
-        function loadClients() {
-            const clients = getClients();
-            const selectEl = document.getElementById('client-select');
-            selectEl.innerHTML = '<option value="">-- New Client --</option>'; // Clear existing options
-            clients.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
-            clients.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.name;
-                option.textContent = client.name;
-                selectEl.appendChild(option);
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                body: JSON.stringify(payload),
+                redirect: 'follow',
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatusMessage(data.message, false);
+                    fetchClients(); // Refresh the client list
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatusMessage(`Error: ${error.message}`, true);
             });
         }
 
@@ -562,14 +604,13 @@
                 document.getElementById('clientEmail').value = '';
                 document.getElementById('clientPhone').value = '';
             } else {
-                const clients = getClients();
-                const client = clients.find(c => c.name === clientName);
+                const client = allClients.find(c => c.ClientName === clientName);
                 if (client) {
-                    document.getElementById('clientName').value = client.name;
-                    document.getElementById('clientCompany').value = client.company;
-                    document.getElementById('clientAddress').value = client.address;
-                    document.getElementById('clientEmail').value = client.email || '';
-                    document.getElementById('clientPhone').value = client.phone || '';
+                    document.getElementById('clientName').value = client.ClientName;
+                    document.getElementById('clientCompany').value = client.ClientCompany;
+                    document.getElementById('clientAddress').value = client.ClientAddress;
+                    document.getElementById('clientEmail').value = client.ClientEmail || '';
+                    document.getElementById('clientPhone').value = client.ClientPhone || '';
                 }
             }
             updatePreview();
@@ -578,7 +619,7 @@
         // --- Document Loading/Saving ---
 
         function fetchDocuments() {
-            fetch(SCRIPT_URL)
+            fetch(SCRIPT_URL + '?action=getDocuments')
                 .then(res => res.json())
                 .then(response => {
                     if (response.status === 'success') {
@@ -738,7 +779,8 @@
             };
             
             const payload = {
-                action: currentlyEditingRow ? 'update' : 'create',
+                action: 'saveDocument',
+                update: !!currentlyEditingRow,
                 rowNumber: currentlyEditingRow,
                 data: docData
             };
