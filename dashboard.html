@@ -143,7 +143,9 @@
             const { documents, clients } = data;
             
             // 1. Process Key Metrics
-            const totalRevenue = documents.filter(d => d.DocumentType === 'invoice').reduce((sum, doc) => sum + parseFloat(doc.TotalAmount || 0), 0);
+            const totalRevenue = documents
+                .filter(d => d.DocumentType === 'invoice')
+                .reduce((sum, doc) => sum + parseFloat(doc.Total || 0), 0); // FIX: Changed TotalAmount to Total
             const totalQuotations = documents.filter(d => d.DocumentType === 'quotation').length;
             const totalInvoices = documents.filter(d => d.DocumentType === 'invoice').length;
             
@@ -163,7 +165,7 @@
             // Revenue Over Time Chart
             const revenueData = documents
                 .filter(d => d.DocumentType === 'invoice')
-                .map(d => ({ date: new Date(d.DocumentDate), amount: parseFloat(d.TotalAmount) }))
+                .map(d => ({ date: new Date(d.DocumentDate), amount: parseFloat(d.Total || 0) })) // FIX: Changed TotalAmount to Total
                 .sort((a, b) => a.date - b.date);
             createRevenueOverTimeChart(revenueData);
             
@@ -175,7 +177,7 @@
                     acc[clientName] = { totalValue: 0, docCount: 0 };
                 }
                 if (doc.DocumentType === 'invoice') {
-                    acc[clientName].totalValue += parseFloat(doc.TotalAmount || 0);
+                    acc[clientName].totalValue += parseFloat(doc.Total || 0); // FIX: Changed TotalAmount to Total
                 }
                 acc[clientName].docCount += 1;
                 return acc;
@@ -261,7 +263,7 @@
                         <td class="p-3">${doc.DocumentType}</td>
                         <td class="p-3">${doc.DocumentNumber}</td>
                         <td class="p-3">${doc.ClientName}</td>
-                        <td class="p-3 text-right">RM ${parseFloat(doc.TotalAmount || 0).toFixed(2)}</td>
+                        <td class="p-3 text-right">RM ${parseFloat(doc.Total || 0).toFixed(2)}</td>
                     </tr>
                 `;
                 tableBody.innerHTML += row;
